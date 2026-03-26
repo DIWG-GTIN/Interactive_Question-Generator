@@ -1,0 +1,3057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Générateur de HTML pour questions interactives — GC Fieldflow</title>
+  <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/wet-boew.min.css">
+  <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/méli-mélo/2024-09-kejimkujik.min.css">
+  <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css">
+  <style>
+    /* Theme tokens */
+    :root {
+      --bg: #f7f7f9;
+      --card: #fff;
+      --ink: #222;
+      --ink-2: #555;
+      --pri: #1b73e8;
+      --pri-2: #0f5bd8;
+      --mut: #e6e6ea;
+      --mut-2: #d0d0d7;
+      --err: #c0392b;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px -16px rgba(0, 0, 0, 0.25);
+      --radius: 16px;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* Page chrome */
+    .appbar {
+      position: sticky;
+      top: 0;
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 8px 0;
+      background: var(--bg);
+    }
+
+    .appbar h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    .right {
+      margin-left: auto;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: flex-start;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: visible;
+    }
+
+    .tablist {
+      position: sticky;
+      top: 160px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-self: flex-start;
+      gap: 6px;
+      min-width: 220px;
+      padding: 12px;
+      background: linear-gradient(#fafafd, #f2f3f6);
+      height: max-content;
+    }
+
+    .tablist button {
+      appearance: none;
+      border: 0;
+      background: #fff;
+      color: var(--ink-2);
+      padding: 10px 12px;
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px var(--mut);
+    }
+
+    .tablist button[aria-selected="true"] {
+      color: #000;
+      box-shadow: inset 0 0 0 2px var(--pri);
+    }
+
+    .tabpanel {
+      flex: 1;
+      padding: 18px 18px 28px;
+      background: var(--card);
+    }
+
+    .section {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 16px 0;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .row > * {
+      flex: 1 1 260px;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+
+    .col-4 {
+      grid-column: span 4;
+    }
+
+    .col-6 {
+      grid-column: span 6;
+    }
+
+    .col-12 {
+      grid-column: span 12;
+    }
+
+    .grid select,
+    .grid input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .kicker {
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    /* Buttons */
+    .btn {
+      appearance: none;
+      border: 0;
+      background: var(--pri);
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--pri-2);
+    }
+
+    .btn.ghost {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px var(--mut);
+    }
+
+    .btn.outline {
+      background: #fff;
+      color: var(--pri);
+      box-shadow: inset 0 0 0 2px var(--pri);
+    }
+
+    .btn.small {
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .btn-danger {
+      background: var(--err);
+    }
+
+    .btn-danger:hover {
+      filter: brightness(0.95);
+    }
+
+    /* Rich text editor chrome */
+    .rt {
+      border: 1px solid var(--mut);
+      border-radius: 12px;
+      background: #fff;
+      overflow: visible;
+    }
+
+    .rt-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px;
+      border-bottom: 1px solid var(--mut);
+      position: static;
+      background: #fff;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    .rt-toolbar .menu {
+      position: relative;
+    }
+
+    .rt-toolbar .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #222;
+      box-shadow: inset 0 0 0 1px var(--mut);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .rt-toolbar .btn:hover {
+      background: #f2f6fc;
+    }
+
+    .rt-toolbar .menu-list {
+      position: absolute;
+      z-index: 1300;
+      top: 100%;
+      left: 0;
+      min-width: 220px;
+      background: #fff;
+      border: 1px solid var(--mut);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 8px;
+      display: none;
+      border-top: 6px solid transparent;
+    }
+
+    .rt-toolbar .menu:hover .menu-list,
+    .rt-toolbar .menu:focus-within .menu-list {
+      display: block;
+    }
+
+    .rt-toolbar .item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .rt-toolbar .item:hover {
+      background: #f5f7fb;
+    }
+
+    .rt-toolbar .is-disabled > .btn,
+    .rt-toolbar .menu .item[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    .rt-editor {
+      min-height: 96px;
+      padding: 10px 12px;
+      outline: none;
+      border: 1px solid #d9d9e3;
+      border-radius: 10px;
+      margin: 8px;
+      background: #fff;
+    }
+
+    .rt-editor:focus {
+      box-shadow: 0 0 0 2px rgba(27, 115, 232, 0.2) inset;
+    }
+
+    .text-left {
+      text-align: left;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .rt-editor .nowrap {
+      white-space: nowrap;
+      text-decoration-line: underline;
+      text-decoration-style: wavy;
+      text-decoration-color: #c97a11;
+    }
+
+    .rt-editor .alert {
+      margin: 12px 0;
+    }
+
+    .rt-editor details {
+      border: 1px dashed var(--mut-2);
+      border-radius: 10px;
+      padding: 10px;
+      margin: 8px 0;
+      background: #fff;
+    }
+
+    .rt-editor details:focus-within {
+      border-color: var(--pri);
+      outline: 2px solid rgba(27, 115, 232, 0.25);
+    }
+
+    .rt-editor details > summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin: -10px -10px 8px -10px;
+      padding: 10px;
+      background: #f7f9ff;
+      border-bottom: 1px dashed var(--mut-2);
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+
+    /* Inline component controls */
+    .rt-editor [data-component] {
+      position: relative;
+    }
+
+    .rt-editor [data-component] .component-tools {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: flex;
+      gap: 4px;
+      padding: 2px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 5;
+    }
+
+    .rt-editor [data-component]:hover > .component-tools,
+    .rt-editor [data-component]:focus-within > .component-tools,
+    .rt-editor [data-component] .component-tools:focus-within {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .component-tools button {
+      border: 0;
+      background: none;
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+
+    .component-tools button:hover {
+      background: var(--mut);
+      color: var(--ink);
+    }
+
+    .component-tools button:focus-visible {
+      outline: 2px solid rgba(27, 115, 232, 0.35);
+      outline-offset: 2px;
+    }
+
+    .component-tools svg {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Cards */
+    .q-card {
+      border: 1px solid var(--mut);
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+    }
+
+    .q-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .answer-card {
+      border: 1px dashed var(--mut-2);
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .answer-card .footerbar {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    /* Generated markup preview */
+    #codeOut {
+      width: 100%;
+      min-height: 260px;
+      box-sizing: border-box;
+      border: 1px solid var(--mut);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .code-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    #globalToolbar {
+      position: sticky;
+      top: 64px;
+      z-index: 1100;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="appbar">
+      <h1>Générateur de HTML pour questions interactives    </h1>  <br>  <br> <br> <p>      <a id="langLink" href="index.html">English</a> </p>
+      <div class="right">
+        <button class="btn ghost" id="btnPreview">Prévisualisation</button>
+        <!-- NEW: Load HTML button -->
+        <button class="btn outline" id="btnPasteHtml">Importer le HTML</button>
+        <!-- Replaced: Save/Load as file operations -->
+        <button class="btn outline" id="btnSave">Sauvegarder JSON</button>
+        <button class="btn outline" id="btnLoad">Chargez JSON</button>
+        <input type="file" id="fileLoad" accept="application/json" style="display:none">
+      </div>
+    </div>
+
+    <!-- Toolbar (same groups/options as your Alert generator) -->
+    <div class="rt section" id="globalToolbar">
+      <div class="rt-toolbar" role="toolbar" aria-label="Formatting toolbar">
+        <!-- Font -->
+        <div class="menu">
+          <button class="btn" aria-haspopup="true">Police</button>
+          <div class="menu-list" role="menu">
+            <button class="item" data-act="bold">Charactère gras</button>
+            <button class="item" data-act="italic">Italique</button>
+            <button class="item" data-act="subscript">Indice</button>
+            <button class="item" data-act="superscript">Exposant</button>
+          </div>
+        </div>
+        <!-- Alignment -->
+        <div class="menu">
+          <button class="btn" aria-haspopup="true">Alignement</button>
+          <div class="menu-list" role="menu">
+            <button class="item" data-align="left">Aligner à gauche</button>
+            <button class="item" data-align="center">Centre</button>
+            <button class="item" data-align="right">Aligner à droite</button>
+          </div>
+        </div>
+        <!-- Lists -->
+        <div class="menu">
+          <button class="btn" aria-haspopup="true">Liste à puce</button>
+          <div class="menu-list" role="menu">
+            <button class="item" data-list="ul">Liste à puce</button>
+            <button class="item" data-list="ol">Liste à numéro</button>
+            <button class="item" data-list="indent">Augmenter le retrait</button>
+            <button class="item" data-list="outdent">Suprimer le retrait</button>
+          </div>
+        </div>
+        <!-- Paragraph / Headings -->
+        <div class="menu">
+          <button class="btn" aria-haspopup="true">Paragraphe</button>
+          <div class="menu-list" role="menu">
+            <button class="item" data-block="p">Paragraphe</button>
+            <button class="item" data-block="h1">Titre 1</button>
+            <button class="item" data-block="h2">Titre 2</button>
+            <button class="item" data-block="h3">Titre 3</button>
+            <button class="item" data-block="h4">Titre 4</button>
+            <button class="item" data-block="h5">Titre 5</button>
+            <button class="item" data-block="h6">Titre 6</button>
+          </div>
+        </div>
+        <!-- Link -->
+        <div class="menu">
+          <button class="btn" aria-haspopup="true">Lien</button>
+          <div class="menu-list" role="menu">
+            <button class="item" data-link="add">Ajouter un hyperlien</button>
+            <button class="item" data-link="remove">Retirer un hyperlien</button>
+            <button class="item" data-link="anchor">Ajouter un ancre</button>
+          </div>
+        </div>
+        <!-- Extras -->
+        <button class="btn" id="btnNowrap">Texte non coupé</button>
+        <button class="btn" id="btnAbbr">Abréviation</button>
+        <button class="btn" id="btnClear"> Effacer la mise en forme</button>
+
+        <!-- NEW: Components picker -->
+        <div class="menu">
+          <button class="btn" aria-haspopup="true">Composants</button>
+          <div class="menu-list" role="menu">
+            <button class="item" data-comp="alert">Insérer une alerte (info)</button>
+            <button class="item" data-comp="details">Insérer un modèle afficher/masquer</button>
+          </div>
+        </div>
+      </div>
+      <div class="kicker">La barre d’outils agit sur l’éditeur qui est actif.</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Editor tabs">
+      <div class="tablist" aria-orientation="vertical">
+        <button role="tab" id="tab-q" aria-controls="panel-q" aria-selected="true">1) Éditeur de questions</button>
+        <button role="tab" id="tab-a" aria-controls="panel-a" aria-selected="false">2) Éditeur de réponses</button>
+      </div>
+
+      <div class="tabpanel" id="panel-q" role="tabpanel" aria-labelledby="tab-q">
+        <div class="section">
+          <h2>Introduction</h2>
+          <div class="kicker">Affiché au-dessus des questions interactives (optionnel).</div>
+          <div class="rt-editor" contenteditable="true" data-role="intro" spellcheck="true"></div>
+        </div>
+
+        <div class="section">
+          <div class="row" style="align-items:center">
+            <h2 style="margin:0">Questions</h2>
+          </div>
+          <div id="questions" class="stack" aria-live="polite"></div>
+		  <div class="row" style="justify-content:flex-end;margin-top:12px">
+            <button class="btn" id="btnAddQuestion">Ajouter une question</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabpanel" id="panel-a" role="tabpanel" aria-labelledby="tab-a" hidden>
+        <div class="row" style="align-items:center">
+          <h2 style="margin:0">Panneaux de réponses</h2>
+          <button class="btn right" id="btnAddAnswerPanel">Ajouter une réponse</button>
+        </div>
+        <div class="kicker"> Créer des alertes réutilisables; les réponses peuvent les afficher.</div>
+        <div id="answers" class="stack" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- Code viewer -->
+    <div class="section">
+      <h2 style="margin-top:0">HTML généré</h2>
+      <pre id="codeOut"></pre>
+      <div class="code-actions">
+        <button class="btn ghost" id="btnCopyCode">Copier le code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="tpl-question">
+    <div class="q-card" data-type="question">
+      <div class="q-head">
+        <strong>Question <span class="q-index"></span></strong>
+        <div>
+          <button class="btn small ghost" data-act="dup">Dupliquer</button>
+          <button class="btn small btn-danger" data-act="del">Effacer</button>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="col-12">
+          <div class="kicker">Texte de la question (apparaît dans wb-fieldflow-label)</div>
+          <div class="rt">
+            <div class="rt-editor" contenteditable="true" data-role="question" spellcheck="true" placeholder="Write your question..."></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="kicker">Description facultative (apparaît sous l’étiquette dans gc-font-2019)</div>
+          <div class="rt">
+            <div class="rt-editor" contenteditable="true" data-role="qdesc" spellcheck="true" placeholder="Optional description…"></div>
+          </div>
+        </div>
+      </div>
+      <div class="answers stack"></div>
+      <div class="footerbar">
+        <button class="btn small" data-act="add-answer">Ajouter une réponse</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-answer-option">
+    <div class="answer-card" data-type="answer-option">
+      <div class="grid">
+        <div class="col-12">
+          <div class="kicker">Texte de la réponse (choix visible)</div>
+          <div class="rt">
+            <div class="rt-editor" contenteditable="true" data-role="answer-text" spellcheck="true" placeholder="Yes / No / custom…"></div>
+          </div>
+        </div>
+        <div class="col-6">
+          <label class="kicker">Lors de la sélection</label>
+          <select data-role="action">
+            <option value="panel">Afficher un panneau de réponse (à partir de l’onglet 2)</option>
+            <option value="goto">Aller à une autre question</option>
+          </select>
+        </div>
+        <div class="col-6" data-scope="panel">
+          <label class="kicker">Panneau de réponse</label>
+          <select data-role="panelRef"></select>
+        </div>
+        <div class="col-6" data-scope="goto" hidden>
+          <label class="kicker">Prochaine question</label>
+          <select data-role="nextQuestion"></select>
+        </div>
+        <div class="col-6">
+          <label class="kicker">Classes CSS facultatives</label>
+          <input type="text" data-role="classes" placeholder="optional"/>
+        </div>
+      </div>
+      <div class="footerbar">
+        <button class="btn small ghost" data-act="dup">Dupliquer la réponse</button>
+        <button class="btn small btn-danger" data-act="del">Retirer la réponse</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-answer-panel">
+    <div class="q-card" data-type="panel">
+      <div class="q-head">
+        <strong>Réponse <span class="a-index"></span></strong>
+        <div>
+          <button class="btn small ghost" data-act="dup">Dupliquer</button>
+          <button class="btn small btn-danger" data-act="del">Effacer</button>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="col-4">
+          <label class="kicker">Style d'alerte</label>
+          <select data-role="panelStyle">
+            <option value="info" selected>Information</option>
+            <option value="success">Succès</option>
+            <option value="warning">Avertissement</option>
+            <option value="danger">Danger</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <label class="kicker">Identifiant stable</label>
+          <input type="text" data-role="panelId" placeholder="e.g., answeryes-1" />
+        </div>
+        <div class="col-4">
+          <label class="kicker">Apparence du titre</label>
+          <select data-role="panelHeadingLevel">
+            <option value="none">Aucune apparence de titre</option>
+            <option value="h2">Apparence de titre 2</option>
+            <option value="h3" selected>Apparence de titre 3</option>
+            <option value="h4">Apparence de titre 4</option>
+            <option value="h5">Apparence de titre 5</option>
+            <option value="h6">Apparence de titre 6</option>
+          </select>
+        </div>
+        <div class="col-12" data-role="panelHeadingWrap">
+          <label class="kicker">Texte du titre</label>
+          <input type="text" data-role="panelHeadingText" placeholder="Alert heading" />
+        </div>
+        <div class="col-12">
+          <div class="kicker">Corps de l’alerte (texte enrichi)</div>
+          <div class="rt">
+            <div class="rt-editor" contenteditable="true" data-role="panelBody" spellcheck="true" placeholder="Headings, lists, links, etc.…"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <dialog id="dlgAlert" style="max-width:520px;width:90%;border:0;border-radius:16px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <form method="dialog" class="stack" style="margin:0;padding:16px;gap:16px">
+      <header style="padding-bottom:4px">
+        <h3 style="margin:0">Insérer l'alerte</h3>
+        <p class="kicker" style="margin-top:6px">Configure the alert block to insert at the caret.</p>
+      </header>
+      <div class="grid" style="gap:12px">
+        <div class="col-6">
+          <label class="kicker" for="alertType">Type d'alerte</label>
+          <select id="alertType" data-field="alertType">
+            <option value="info" selected>Information</option>
+            <option value="success">Succès</option>
+            <option value="warning">Avertissement</option>
+            <option value="danger">Danger</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="kicker" for="alertHeadingLevel">Apparence du titre</label>
+          <select id="alertHeadingLevel" data-field="alertHeadingLevel">
+            <option value="none">Aucune apparence de titre</option>
+            <option value="h2">Apparence de titre 2</option>
+            <option value="h3" selected>Apparence de titre 3</option>
+            <option value="h4">Apparence de titre 4</option>
+            <option value="h5">Apparence de titre 5</option>
+            <option value="h6">Apparence de titre 6</option>
+          </select>
+        </div>
+        <div class="col-12" data-field="headingWrap">
+          <label class="kicker" for="alertHeadingText">Titre</label>
+          <input type="text" id="alertHeadingText" data-field="alertHeadingText" placeholder="Alert heading" />
+        </div>
+      </div>
+      <div>
+        <div class="kicker">Texte</div>
+        <div class="rt" style="border-radius:12px">
+          <div class="rt-editor" contenteditable="true" data-role="alertBody" spellcheck="true" placeholder="Alert content…"></div>
+        </div>
+      </div>
+      <footer style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn ghost" type="button" data-action="cancel">Canceller</button>
+        <button class="btn" type="submit">Insérer une alerte</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="dlgPasteHtml" style="max-width:900px;width:90%;border:0;border-radius:16px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <form method="dialog" style="display:flex;flex-direction:column;gap:12px">
+      <header style="padding:16px 16px 0">
+        <h3 style="margin:0">Coller le HTML exporté de Fieldflow </h3>
+        <p class="kicker">Collez le balisage que vous avez copié depuis une page ; nous allons analyser ce que ce générateur exporte.</p>
+      </header>
+      <div style="padding:0 16px 8px">
+        <textarea id="taPasteHtml" rows="18" spellcheck="false"
+          style="width:100%;box-sizing:border-box;border:1px solid var(--mut);border-radius:12px;padding:12px;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"></textarea>
+      </div>
+      <footer style="display:flex;gap:8px;justify-content:flex-end;padding:0 16px 16px">
+        <button class="btn ghost" value="cancel">Canceller</button>
+        <button class="btn ghost" type="button" data-act="clear">Effacer le formatage</button>
+        <button class="btn" type="button" data-act="import">Importer</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script>
+  // === Editor selection state ===
+  let activeEditor = null;
+  let alertDialogTarget = null;
+  let dialogPreviousEditor = null;
+  let restoreEditorAfterAlert = true;
+  let alertSelectionRange = null;
+  let alertEditingNode = null;
+
+  // Escapes arbitrary text using a temporary element to prevent markup injection.
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  function parseFieldflowData(str){
+    if(!str) return null;
+    try{
+      return JSON.parse(str);
+    }catch{
+      return null;
+    }
+  }
+
+  // Ensures an editor is focused when toolbar actions run.
+  function ensureEditor(){
+    if(!activeEditor){
+      const first=document.querySelector('.rt-editor');
+      if(first){ first.focus(); activeEditor=first; }
+    }
+  }
+  
+  // Identifies editors where component insertion is not permitted.
+  function isComponentDisallowedTarget(el){
+    return !!el && el.matches('[data-role="question"], [data-role="answer-text"]');
+  }
+
+  // Toggles the component menu based on the active editor capabilities.
+  function updateComponentsMenuState(){
+    const compMenu = [...document.querySelectorAll('.rt-toolbar .menu')]
+      .find(m => m.querySelector('[data-comp]'));
+    if(!compMenu) return;
+
+    const disallowed = isComponentDisallowedTarget(activeEditor);
+    compMenu.classList.toggle('is-disabled', disallowed);
+
+    compMenu.querySelectorAll('[data-comp]').forEach(it =>
+      it.setAttribute('aria-disabled', disallowed ? 'true' : 'false')
+    );
+  }
+
+  // Caches editor instances that already listen for component updates.
+  const componentBoundEditors = new WeakSet();
+  // Holds scheduled animation frame handles for editor decoration.
+  const componentDecorations = new WeakMap();
+  // Inline SVG icons used for the component tool palette.
+  const ICON_EDIT = '<svg aria-hidden="true" viewBox="0 0 16 16"><path fill="currentColor" d="M11.3 1.3l3.4 3.4a1 1 0 010 1.4l-7.8 7.8a1 1 0 01-.45.26l-4 1a1 1 0 01-1.21-1.21l1-4a1 1 0 01.26-.45l7.8-7.8a1 1 0 011.4 0zM3.7 11.3l-.6 2.4 2.4-.6L13 5.6 10.4 3z"></path></svg>';
+  const ICON_DELETE = '<svg aria-hidden="true" viewBox="0 0 16 16"><path fill="currentColor" d="M6 1a1 1 0 00-1 1v1H2.5a.5.5 0 000 1h.6l.74 8.3A2 2 0 005.83 14h4.34a2 2 0 001.99-1.7L12.9 4h.6a.5.5 0 000-1H11V2a1 1 0 00-1-1H6zm1 2h2V2H7v1zm4.9 1H4.1l.7 8a1 1 0 00.99.9h4.42a1 1 0 00.99-.9l.7-8z"></path></svg>';
+
+  // Supported heading levels for alert panels.
+  const ALERT_HEADING_LEVELS = ['h2','h3','h4','h5','h6'];
+  // Selector that matches alert heading elements we normalize.
+  const ALERT_HEADING_SELECTOR = ALERT_HEADING_LEVELS
+    .map(level => `:scope > ${level}`)
+    .concat(ALERT_HEADING_LEVELS.map(level => `:scope > p.${level}`))
+    .join(', ');
+
+  // Defers component decoration to the next animation frame for a given editor.
+  function scheduleDecorate(editor){
+    if(!editor || !editor.isConnected) return;
+    if(componentDecorations.has(editor)) return;
+    const handle = requestAnimationFrame(()=>{
+      componentDecorations.delete(editor);
+      decorateComponents(editor);
+    });
+    componentDecorations.set(editor, handle);
+  }
+
+  // Adds component decoration listeners to editors on first use.
+  function setupEditor(editor){
+    if(!editor) return;
+    if(!componentBoundEditors.has(editor)){
+      editor.addEventListener('input', ()=>scheduleDecorate(editor));
+      editor.addEventListener('focus', ()=>scheduleDecorate(editor));
+      componentBoundEditors.add(editor);
+    }
+    if(editor.isConnected){
+      scheduleDecorate(editor);
+    }else{
+      requestAnimationFrame(()=>setupEditor(editor));
+    }
+  }
+
+  // Determines whether an element is an alert or details component container.
+  function isComponentHost(node){
+    return !!node && (node.matches('section.alert') || node.matches('details'));
+  }
+
+  // Resolves the alert style from stored attributes or legacy classes.
+  function getAlertType(node){
+    if(!node) return 'info';
+    const fromData = node.getAttribute('data-alert-type');
+    if(fromData) return fromData;
+    if(node.classList.contains('alert-success')) return 'success';
+    if(node.classList.contains('alert-warning')) return 'warning';
+    if(node.classList.contains('alert-danger')) return 'danger';
+    return 'info';
+  }
+
+  // Synchronizes edit/delete tool labels with the host component type.
+  function updateComponentToolLabels(tools, comp){
+    const isAlert = comp.matches('section.alert');
+    const editLabel = isAlert ? 'Edit alert' : 'Edit expand/collapse block';
+    const deleteLabel = isAlert ? 'Delete alert' : 'Delete expand/collapse block';
+    const editBtn = tools.querySelector('[data-tool="edit"]');
+    const delBtn = tools.querySelector('[data-tool="delete"]');
+    if(editBtn){
+      editBtn.setAttribute('aria-label', editLabel);
+      editBtn.title = editLabel;
+    }
+    if(delBtn){
+      delBtn.setAttribute('aria-label', deleteLabel);
+      delBtn.title = deleteLabel;
+    }
+  }
+
+  // Injects management controls for component hosts within an editor.
+  function decorateComponents(editor){
+    if(!editor || !editor.isConnected) return;
+
+    editor.querySelectorAll('.component-tools').forEach(tools=>{
+      const host = tools.parentElement;
+      if(!isComponentHost(host)) tools.remove();
+    });
+
+    editor.querySelectorAll('section.alert, details').forEach(comp=>{
+      const kind = comp.matches('section.alert') ? 'alert' : 'details';
+      comp.setAttribute('data-component', kind);
+      if(kind === 'alert'){
+        comp.setAttribute('data-alert-type', getAlertType(comp));
+      }
+
+      let tools = comp.querySelector(':scope > .component-tools');
+      if(!tools){
+        tools = createComponentTools(comp);
+        comp.appendChild(tools);
+      }else{
+        updateComponentToolLabels(tools, comp);
+      }
+    });
+  }
+
+  // Builds the floating edit/delete controls for a component host.
+  function createComponentTools(comp){
+    const tools = document.createElement('div');
+    tools.className = 'component-tools';
+    tools.setAttribute('contenteditable', 'false');
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'component-tool';
+    editBtn.setAttribute('data-tool', 'edit');
+    editBtn.innerHTML = ICON_EDIT;
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'component-tool';
+    delBtn.setAttribute('data-tool', 'delete');
+    delBtn.innerHTML = ICON_DELETE;
+
+    tools.append(editBtn, delBtn);
+    updateComponentToolLabels(tools, comp);
+
+    tools.addEventListener('mousedown', ev => ev.stopPropagation());
+    tools.addEventListener('mouseup', ev => ev.stopPropagation());
+    tools.addEventListener('click', ev => ev.stopPropagation());
+
+    editBtn.addEventListener('click', ev => {
+      ev.preventDefault();
+      handleComponentEdit(comp);
+    });
+    delBtn.addEventListener('click', ev => {
+      ev.preventDefault();
+      handleComponentDelete(comp);
+    });
+
+    return tools;
+  }
+
+  // Opens the appropriate dialog to edit a selected component block.
+  function handleComponentEdit(comp){
+    const editor = comp.closest('.rt-editor');
+    if(editor){
+      activeEditor = editor;
+      updateComponentsMenuState();
+    }
+    if(comp.matches('section.alert')){
+      editAlertComponent(comp);
+    }else if(comp.matches('details')){
+      editDetailsComponent(comp);
+    }
+  }
+
+  // Removes a component block and cleans any trailing placeholders.
+  function handleComponentDelete(comp){
+    const editor = comp.closest('.rt-editor');
+    if(!editor) return;
+    const tail = comp.nextElementSibling;
+    comp.remove();
+    if(tail && tail.matches('p[data-tail]') && !tail.textContent.trim() && !tail.querySelector('*:not(br)')){
+      tail.remove();
+    }
+    ensureTail(editor);
+    scheduleDecorate(editor);
+    editor.dispatchEvent(new Event('input', { bubbles:true }));
+    editor.focus();
+    activeEditor = editor;
+    updateComponentsMenuState();
+  }
+
+  // Launches the alert dialog pre-populated with an existing alert node.
+  function editAlertComponent(node){
+    openAlertDialog(node);
+  }
+
+  // Prompts for summary text when editing a details component inline.
+  function editDetailsComponent(details){
+    if(!details) return;
+    const summary = details.querySelector('summary');
+    if(!summary){
+      details.open = true;
+      return;
+    }
+    const current = summary.textContent.trim();
+    const next = prompt('Expand/collapse title', current);
+    if(next === null) return;
+    summary.textContent = next || 'Expand/Collapse Title';
+    details.open = true;
+    const editor = details.closest('.rt-editor');
+    if(editor){
+      ensureTail(editor);
+      scheduleDecorate(editor);
+      editor.dispatchEvent(new Event('input', { bubbles:true }));
+      editor.focus();
+      activeEditor = editor;
+      updateComponentsMenuState();
+    }
+    summary.focus();
+  }
+
+	  
+  // Executes a document.execCommand inline formatting action.
+  function execInline(cmd){
+    ensureEditor();
+    document.execCommand(cmd, false, null);
+    if(activeEditor){ activeEditor.dispatchEvent(new Event('input', {bubbles:true})); }
+  }
+
+  // Applies a block-level tag around the current selection.
+  function setBlock(tag){
+    ensureEditor();
+    document.execCommand('formatBlock', false, tag.toUpperCase());
+  }
+
+  // Normalizes text alignment utility classes on the active editor.
+  function setAlign(dir){
+    ensureEditor();
+    const el=activeEditor;
+    el.classList.remove('text-left','text-center','text-right');
+    if(dir==='left') el.classList.add('text-left');
+    if(dir==='center') el.classList.add('text-center');
+    if(dir==='right') el.classList.add('text-right');
+  }
+
+  // Wraps the current selection with a newly created element and attributes.
+  function wrapSelection(tagName, attrs = {}){
+    ensureEditor();
+    if(!activeEditor) return null;
+
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return null;
+
+    const range = sel.getRangeAt(0);
+    if(!activeEditor.contains(range.commonAncestorContainer)) return null;
+    if(range.collapsed) return null;
+
+    const el = document.createElement(tagName);
+    Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v));
+
+    const contents = range.extractContents();
+    el.appendChild(contents);
+    range.insertNode(el);
+
+    sel.removeAllRanges();
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    sel.addRange(r);
+
+    activeEditor.dispatchEvent(new Event('input', { bubbles:true }));
+    return el;
+  }
+
+
+  // Adds or removes a span.nowrap wrapper around the current word selection.
+  function toggleNowrap(){
+    ensureEditor();
+    if(!activeEditor) return;
+
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+
+    let node = sel.anchorNode;
+    if(node && node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+    const existing = node && node.closest ? node.closest('span.nowrap') : null;
+    if(existing && activeEditor.contains(existing)){
+      existing.replaceWith(...existing.childNodes);
+      activeEditor.dispatchEvent(new Event('input', { bubbles:true }));
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    if(range.collapsed){
+      const textNode = range.startContainer;
+      if(textNode && textNode.nodeType === Node.TEXT_NODE){
+        const text = textNode.textContent;
+        let start = range.startOffset;
+        let end = range.startOffset;
+
+        while(start > 0 && /\S/.test(text[start-1])) start--;
+        while(end < text.length && /\S/.test(text[end])) end++;
+
+        const r = document.createRange();
+        r.setStart(textNode, start);
+        r.setEnd(textNode, end);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    }
+
+    wrapSelection('span', { class: 'nowrap' });
+  }
+
+
+  // Creates an <abbr> element around the current selection or prompt text.
+  function insertAbbr(){
+    ensureEditor();
+    if(!activeEditor) return;
+
+    const title = prompt('Abbreviation title (what does it mean?)','');
+    if(title === null) return;
+
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+
+    if(range.collapsed){
+      const short = prompt('Text to show for the abbreviation (e.g., CRA, GST, etc.)','');
+      if(!short) return;
+
+      const ab = document.createElement('abbr');
+      ab.setAttribute('title', title);
+      ab.textContent = short;
+
+      range.insertNode(ab);
+      range.setStartAfter(ab);
+      range.setEndAfter(ab);
+      sel.removeAllRanges();
+      sel.addRange(range);
+
+      activeEditor.dispatchEvent(new Event('input', { bubbles:true }));
+      return;
+    }
+
+    wrapSelection('abbr', { title });
+  }
+
+
+  // Handles hyperlink insertion, removal, and anchor placement commands.
+  function linkAction(kind){
+    ensureEditor();
+    if(kind==='remove'){ document.execCommand('unlink', false, null); return; }
+    if(kind==='add'){
+      const url = prompt('Enter URL (https://, mailto:, tel:, or #id):','https://');
+      if(!url) return;
+      document.execCommand('createLink', false, url);
+      return;
+    }
+    if(kind==='anchor'){
+      const id=prompt('Anchor id (no spaces):','');
+      if(!id) return;
+      const sel=window.getSelection();
+      const rng=sel.rangeCount?sel.getRangeAt(0):null;
+      if(!rng) return;
+      const span=document.createElement('span');
+      span.setAttribute('id', id);
+      if(rng.collapsed){ span.textContent='\u200b'; rng.insertNode(span); }
+      else{ rng.surroundContents(span); }
+    }
+  }
+
+  // Converts the current selection into plain paragraphs and clears alignment utilities.
+  function clearFormatting(node=activeEditor){
+    ensureEditor();
+    const editor = node || activeEditor;
+    if(!editor) return;
+
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+
+    const range = sel.getRangeAt(0);
+    if(!editor.contains(range.commonAncestorContainer)) return;
+
+    if(range.collapsed){
+      let block = range.startContainer;
+      while(block && block !== editor && block.nodeType === Node.TEXT_NODE){
+        block = block.parentNode;
+      }
+      while(block && block !== editor && block.nodeType === Node.ELEMENT_NODE && !/^(P|DIV|LI|H[1-6]|BLOCKQUOTE)$/i.test(block.tagName)){
+        block = block.parentNode;
+      }
+      if(block && block !== editor){
+        const blockRange = document.createRange();
+        blockRange.selectNodeContents(block);
+        sel.removeAllRanges();
+        sel.addRange(blockRange);
+        return clearFormatting(editor);
+      }
+      return;
+    }
+
+    editor.focus();
+
+    const PLACEHOLDER = '\uf0ff';
+    const blockTags = new Set(['P','DIV','LI','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','PRE','FIGCAPTION']);
+
+    const extracted = range.extractContents();
+    const container = document.createElement('div');
+    container.appendChild(extracted);
+
+    const lines = [];
+    let current = '';
+
+    const normalizeLine = (line) => {
+      if(line == null) return '';
+      const withPlaceholders = line.replace(/\u00a0/g, PLACEHOLDER);
+      const collapsed = withPlaceholders.replace(/[ \t]+/g, ' ');
+      const trimmed = collapsed.trim();
+      return trimmed.replace(new RegExp(PLACEHOLDER, 'g'), '\u00a0');
+    };
+
+    const flush = () => {
+      const cleaned = normalizeLine(current);
+      if(cleaned){
+        lines.push(cleaned);
+      }
+      current = '';
+    };
+
+    const traverse = (node) => {
+      if(node.nodeType === Node.TEXT_NODE){
+        current += node.nodeValue;
+        return;
+      }
+
+      if(node.nodeType !== Node.ELEMENT_NODE){
+        return;
+      }
+
+      const tag = node.tagName;
+
+      if(tag === 'BR'){
+        flush();
+        return;
+      }
+
+      const isBlock = blockTags.has(tag) || tag === 'LI';
+
+      Array.from(node.childNodes).forEach(traverse);
+
+      if(isBlock){
+        flush();
+      }
+    };
+
+    Array.from(container.childNodes).forEach(traverse);
+    flush();
+
+    const fragment = document.createDocumentFragment();
+    const paragraphs = lines.length ? lines : [''];
+    const created = [];
+
+    paragraphs.forEach(text => {
+      const p = document.createElement('p');
+      if(text){
+        p.textContent = text;
+      } else {
+        p.innerHTML = '<br>';
+      }
+      fragment.appendChild(p);
+      created.push(p);
+    });
+
+    const marker = document.createTextNode('');
+    range.insertNode(marker);
+
+    const listTags = new Set(['LI','UL','OL']);
+    let host = marker.parentNode;
+    const pruneListAncestor = (node) => {
+      let current = node;
+      while(current && current !== editor && current.nodeType === Node.ELEMENT_NODE){
+        if(current.tagName === 'LI'){
+          if(!current.textContent.trim()){
+            const next = current.parentNode;
+            current.remove();
+            current = next;
+            continue;
+          }
+        }
+        if(current.tagName === 'UL' || current.tagName === 'OL'){
+          Array.from(current.children).forEach(child => {
+            if(child.tagName === 'LI' && !child.textContent.trim()){
+              child.remove();
+            }
+          });
+          if(!current.querySelector('li')){
+            const next = current.parentNode;
+            current.remove();
+            current = next;
+            continue;
+          }
+        }
+        break;
+      }
+    };
+
+    while(host && host !== editor && host.nodeType === Node.ELEMENT_NODE && listTags.has(host.tagName)){
+      const parent = host.parentNode;
+      if(!parent) break;
+      parent.insertBefore(marker, host.nextSibling);
+      pruneListAncestor(host);
+      host = marker.parentNode;
+    }
+
+    marker.replaceWith(fragment);
+
+    const lastParagraph = created.length ? created[created.length - 1] : null;
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    const after = document.createRange();
+    if(lastParagraph && lastParagraph.parentNode){
+      after.setStartAfter(lastParagraph);
+    } else {
+      after.setStart(range.endContainer, range.endOffset);
+    }
+    after.collapse(true);
+    selection.addRange(after);
+
+    editor.classList.remove('text-left','text-center','text-right');
+    editor.dispatchEvent(new Event('input', { bubbles:true }));
+    ensureTail(editor);
+    scheduleDecorate(editor);
+  }
+
+  // Injects sanitized HTML at the caret and schedules decoration updates.
+  function insertAtCaret(html){
+    ensureEditor();
+    activeEditor.focus();
+    document.execCommand('insertHTML', false, html);
+    activeEditor.dispatchEvent(new Event('input', {bubbles:true}));
+	scheduleDecorate(activeEditor);
+  }
+
+  // Inserts a scaffolded <details> component at the caret position.
+  function insertDetailsBlock(){
+    ensureEditor();
+    if(!activeEditor) return;
+
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    if(!activeEditor.contains(range.commonAncestorContainer)) return;
+
+    const details = document.createElement('details');
+	details.setAttribute('data-component', 'details');
+    const summary = document.createElement('summary');
+    summary.textContent = 'Expand/Collapse Title';
+    const h3 = document.createElement('h3');
+    h3.textContent = 'Expand/Collapse Heading';
+    const p = document.createElement('p');
+    p.textContent = 'Expand/Collapse content';
+    details.append(summary, h3, p);
+
+    range.deleteContents();
+    range.insertNode(details);
+
+    const tail = document.createElement('p');
+    tail.setAttribute('data-tail','');
+    tail.innerHTML = '<br>';
+    details.after(tail);
+
+    const r = document.createRange();
+    r.setStart(tail, 0);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+
+    activeEditor.dispatchEvent(new Event('input', { bubbles:true }));
+    ensureTail(activeEditor);
+        scheduleDecorate(activeEditor);
+  }
+
+  // Generates a sanitized heading paragraph for alert markup exports.
+  function buildAlertHeadingMarkup(level, text){
+    const trimmed = (text || '').trim();
+    if(!trimmed) return '';
+    if(!ALERT_HEADING_LEVELS.includes(level)) return '';
+    const classes = [level, 'mrgn-tp-0'];
+    return `<p class="${classes.join(' ')}">${escapeHtml(trimmed)}</p>`;
+  }
+
+  // Locates any heading-like child inside an alert container.
+  function findAlertHeading(node){
+    if(!node) return null;
+    try{
+      return node.querySelector(ALERT_HEADING_SELECTOR);
+    }catch(e){
+      return null;
+    }
+  }
+
+  // Derives the heading level appearance for a normalized alert heading.
+  function getAlertHeadingAppearance(node){
+    if(!node || !node.tagName) return 'none';
+    const tag = node.tagName.toLowerCase();
+    if(ALERT_HEADING_LEVELS.includes(tag)){
+      return tag;
+    }
+    if(tag === 'p'){
+      const match = ALERT_HEADING_LEVELS.find(level => node.classList.contains(level));
+      return match || 'none';
+    }
+    return 'none';
+  }
+
+  // Converts heading tags inside alerts into consistent paragraphs with classes.
+  function normalizeAlertHeadingContainer(container){
+    if(!container) return;
+    Array.from(container.children || []).forEach(child => {
+      if(!(child && child.tagName)) return;
+      const tag = child.tagName.toLowerCase();
+      if(ALERT_HEADING_LEVELS.includes(tag)){
+        const existing = (child.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+        const classes = [];
+        existing.forEach(cls => { if(!classes.includes(cls)) classes.push(cls); });
+        if(!classes.includes(tag)) classes.push(tag);
+        if(!classes.includes('mrgn-tp-0')) classes.push('mrgn-tp-0');
+        const p = document.createElement('p');
+        if(classes.length) p.className = classes.join(' ');
+        p.innerHTML = child.innerHTML;
+        child.replaceWith(p);
+      }else if(tag === 'p'){
+        const hasAppearance = ALERT_HEADING_LEVELS.some(level => child.classList.contains(level));
+        if(hasAppearance && !child.classList.contains('mrgn-tp-0')){
+          child.classList.add('mrgn-tp-0');
+        }
+      }
+    });
+  }
+
+  // Cleans alert body markup while preserving normalized headings.
+  function normalizeAlertBodyHTMLString(html){
+    if(!html) return '';
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    normalizeAlertHeadingContainer(host);
+    return host.innerHTML.trim();
+  }
+
+  // Applies alert normalization to arbitrary HTML snippets.
+  function normalizeAlertsInHtml(html){
+    if(!html) return '';
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    host.querySelectorAll('section.alert').forEach(normalizeAlertHeadingContainer);
+    return host.innerHTML.trim();
+  }
+
+  // Guarantees panel records contain the latest fields with defaults.
+  function upgradePanelRecord(panel){
+    const normalized = {
+      id: panel?.id || uid('answer'),
+      style: panel?.style || 'info',
+      headingLevel: 'none',
+      headingText: '',
+      bodyHTML: ''
+    };
+
+    const storedLevel = panel && typeof panel.headingLevel === 'string'
+      ? panel.headingLevel.trim().toLowerCase()
+      : 'none';
+    const storedText = panel && typeof panel.headingText === 'string'
+      ? panel.headingText.trim()
+      : '';
+
+    if(ALERT_HEADING_LEVELS.includes(storedLevel) || storedLevel === 'none'){
+      normalized.headingLevel = storedLevel;
+      normalized.headingText = storedText;
+    }
+
+    const originalBody = panel?.bodyHTML || '';
+    const sanitizedBody = normalizeAlertBodyHTMLString(originalBody);
+    const host = document.createElement('div');
+    host.innerHTML = sanitizedBody;
+
+    const headingNode = findAlertHeading(host);
+    if(headingNode){
+      const derivedLevel = getAlertHeadingAppearance(headingNode);
+      const derivedText = headingNode.textContent.trim();
+      headingNode.remove();
+      if(!ALERT_HEADING_LEVELS.includes(normalized.headingLevel)){
+        normalized.headingLevel = ALERT_HEADING_LEVELS.includes(derivedLevel) ? derivedLevel : 'none';
+      }
+      if(!normalized.headingText){
+        normalized.headingText = derivedText;
+      }
+    }
+
+    if(!ALERT_HEADING_LEVELS.includes(normalized.headingLevel)){
+      normalized.headingLevel = 'none';
+    }
+    if(typeof normalized.headingText !== 'string'){
+      normalized.headingText = '';
+    }
+
+    normalized.bodyHTML = host.innerHTML.trim();
+    return normalized;
+  }
+
+  // Shows or hides heading controls in the alert dialog based on level.
+  function updateAlertHeadingState(level){
+    const dlg = document.getElementById('dlgAlert');
+    if(!dlg) return;
+    const wrap = dlg.querySelector('[data-field="headingWrap"]');
+    if(wrap){
+      wrap.hidden = !ALERT_HEADING_LEVELS.includes(level);
+    }
+  }
+
+  // Opens the alert dialog either for insertion or editing of a block.
+  function openAlertDialog(existingNode=null){
+    const dlg = document.getElementById('dlgAlert');
+    if(!dlg) return;
+
+    const typeSel = dlg.querySelector('[data-field="alertType"]');
+    const headingSel = dlg.querySelector('[data-field="alertHeadingLevel"]');
+    const headingInput = dlg.querySelector('[data-field="alertHeadingText"]');
+    const bodyEd = dlg.querySelector('[data-role="alertBody"]');
+    const titleNode = dlg.querySelector('h3');
+
+    alertEditingNode = existingNode || null;
+
+    if(existingNode){
+      const editor = existingNode.closest('.rt-editor');
+      alertDialogTarget = editor;
+      dialogPreviousEditor = editor;
+      restoreEditorAfterAlert = true;
+      alertSelectionRange = null;
+    }else{
+      alertDialogTarget = activeEditor;
+      dialogPreviousEditor = activeEditor;
+      restoreEditorAfterAlert = true;
+      alertSelectionRange = null;
+
+      if(alertDialogTarget){
+        const sel = window.getSelection();
+        if(sel && sel.rangeCount){
+          const range = sel.getRangeAt(0);
+          if(alertDialogTarget.contains(range.commonAncestorContainer)){
+            alertSelectionRange = range.cloneRange();
+          }
+        }
+      }
+    }
+
+	if(titleNode){
+      titleNode.textContent = existingNode ? 'Edit alert' : 'Insert alert';
+    }
+
+    if(existingNode && existingNode.isConnected){
+      const type = getAlertType(existingNode);
+      if(typeSel) typeSel.value = type;
+
+      let headingLevel = 'none';
+      let headingText = '';
+      const headingNode = findAlertHeading(existingNode);
+      if(headingNode){
+        headingLevel = getAlertHeadingAppearance(headingNode);
+        headingText = headingNode.textContent.trim();
+      }
+      if(headingSel){
+        const value = ALERT_HEADING_LEVELS.includes(headingLevel) ? headingLevel : 'none';
+        headingSel.value = value;
+        updateAlertHeadingState(value);
+      }else{
+        updateAlertHeadingState(headingLevel);
+      }
+      if(headingInput) headingInput.value = headingText;
+
+      if(bodyEd){
+        const clone = existingNode.cloneNode(true);
+        clone.querySelectorAll('.component-tools').forEach(n=>n.remove());
+        const headClone = findAlertHeading(clone);
+        if(headClone) headClone.remove();
+        let bodyMarkup = normalizeAlertBodyHTMLString(clone.innerHTML.trim());
+        if(!bodyMarkup) bodyMarkup = '<p></p>';
+        bodyEd.innerHTML = bodyMarkup;
+        ensureTail(bodyEd);
+        setTimeout(()=>{
+          bodyEd.focus();
+          activeEditor = bodyEd;
+          updateComponentsMenuState();
+        }, 0);
+      }
+    }else{
+      if(typeSel) typeSel.value = 'info';
+      if(headingSel){
+        headingSel.value = 'h3';
+        updateAlertHeadingState('h3');
+      }else{
+        updateAlertHeadingState('none');
+      }
+      if(headingInput){
+        headingInput.value = '';
+      }
+      if(bodyEd){
+        bodyEd.innerHTML = '<p>Alert text</p>';
+        ensureTail(bodyEd);
+        setTimeout(()=>{
+          bodyEd.focus();
+          activeEditor = bodyEd;
+          updateComponentsMenuState();
+        }, 0);
+      }
+    }
+
+    dlg.returnValue = '';
+    dlg.showModal();
+  }
+
+  // Wires up the alert dialog controls and editing workflow.
+  function bindAlertDialog(){
+    const dlg = document.getElementById('dlgAlert');
+    if(!dlg) return;
+
+    const bodyEd = dlg.querySelector('[data-role="alertBody"]');
+    const headingSel = dlg.querySelector('[data-field="alertHeadingLevel"]');
+    const cancelBtn = dlg.querySelector('[data-action="cancel"]');
+    const form = dlg.querySelector('form');
+
+    if(bodyEd){
+      bodyEd.addEventListener('input', ()=>ensureTail(bodyEd));
+      bodyEd.addEventListener('focus', ()=>{
+        activeEditor = bodyEd;
+        updateComponentsMenuState();
+      });
+    }
+
+    if(headingSel){
+      headingSel.addEventListener('change', ()=>{
+        const value = ALERT_HEADING_LEVELS.includes(headingSel.value) ? headingSel.value : 'none';
+        updateAlertHeadingState(value);
+      });
+    }
+
+    if(cancelBtn){
+      cancelBtn.addEventListener('click', ()=>{
+        restoreEditorAfterAlert = true;
+        dlg.close();
+      });
+    }
+
+    dlg.addEventListener('cancel', (ev)=>{
+      ev.preventDefault();
+      restoreEditorAfterAlert = true;
+      dlg.close();
+    });
+
+    dlg.addEventListener('close', ()=>{
+      if(bodyEd){
+        bodyEd.innerHTML = '';
+      }
+      if(restoreEditorAfterAlert && dialogPreviousEditor && dialogPreviousEditor.isConnected){
+        activeEditor = dialogPreviousEditor;
+        dialogPreviousEditor.focus();
+        updateComponentsMenuState();
+      }
+      dialogPreviousEditor = null;
+      alertDialogTarget = null;
+      restoreEditorAfterAlert = true;
+      alertSelectionRange = null;
+	  alertEditingNode = null;
+    });
+
+    if(form){
+      form.addEventListener('submit', (ev)=>{
+        ev.preventDefault();
+        const type = (dlg.querySelector('[data-field="alertType"]')||{}).value || 'info';
+        let headingLevel = headingSel ? headingSel.value : 'none';
+        if(!ALERT_HEADING_LEVELS.includes(headingLevel)) headingLevel = 'none';
+        const headingText = (dlg.querySelector('[data-field="alertHeadingText"]')||{}).value || '';
+        const bodyHtmlRaw = bodyEd ? stripTailHTML(bodyEd.innerHTML) : '';
+        const bodyHtmlSanitized = normalizeAlertBodyHTMLString(bodyHtmlRaw);
+        const bodyHtml = bodyHtmlSanitized ? bodyHtmlSanitized : '<p></p>';
+
+        const headingMarkup = buildAlertHeadingMarkup(headingLevel, headingText);
+
+        const html = `<section class="alert alert-${type}" data-component="alert" data-alert-type="${type}">${headingMarkup}${bodyHtml}</section>`;
+
+        const target = alertDialogTarget && alertDialogTarget.isConnected
+          ? alertDialogTarget
+          : (dialogPreviousEditor && dialogPreviousEditor.isConnected ? dialogPreviousEditor : null);
+
+        if(alertEditingNode && alertEditingNode.isConnected){
+          const node = alertEditingNode;
+          const editor = target || node.closest('.rt-editor');
+          restoreEditorAfterAlert = false;
+          dlg.close();
+
+          node.classList.remove('alert-info','alert-success','alert-warning','alert-danger');
+          node.classList.add('alert', `alert-${type}`);
+          node.setAttribute('data-component','alert');
+          node.setAttribute('data-alert-type', type);
+          node.innerHTML = headingMarkup + bodyHtml;
+
+          if(editor){
+            activeEditor = editor;
+            ensureTail(editor);
+            scheduleDecorate(editor);
+            editor.dispatchEvent(new Event('input', { bubbles:true }));
+            editor.focus();
+            updateComponentsMenuState();
+          }
+        }else{
+          restoreEditorAfterAlert = false;
+          dlg.close();
+
+          if(target){
+            activeEditor = target;
+            target.focus();
+            if(alertSelectionRange){
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(alertSelectionRange);
+            }
+            updateComponentsMenuState();
+            insertAtCaret(html);
+          }
+        }
+        alertSelectionRange = null;
+      });
+    }
+  }
+  // Guarantees there is a trailing placeholder paragraph for caret placement.
+  function ensureTail(editor){
+    if(!editor) return;
+    const tails = Array.from(editor.querySelectorAll('p[data-tail]'));
+    let hasValidTail = false;
+
+    tails.forEach((tail, idx) => {
+      const isLast = idx === tails.length - 1;
+      const hasMeaningfulContent = tail.textContent.trim().length > 0 || tail.querySelector('*:not(br)');
+
+      if (isLast && !hasMeaningfulContent){
+        hasValidTail = true;
+        if (tail.innerHTML !== '<br>'){
+          tail.innerHTML = '<br>';
+        }
+      } else {
+        tail.removeAttribute('data-tail');
+      }
+    });
+
+    if(!hasValidTail){
+      const p = document.createElement('p');
+      p.setAttribute('data-tail','');
+      p.innerHTML = '<br>';
+      editor.appendChild(p);
+    }
+  }
+  // Removes caret sentinels and editor-only attributes from captured HTML.
+  function stripTailHTML(html){
+    const host = document.createElement('div');
+    host.innerHTML = html || '';
+    host.querySelectorAll('p[data-tail]').forEach(n => n.remove());
+        host.querySelectorAll('.component-tools').forEach(n => n.remove());
+    host.querySelectorAll('[data-component]').forEach(n => {
+      n.removeAttribute('data-component');
+      n.removeAttribute('data-alert-type');
+    });
+    host.querySelectorAll('section.alert').forEach(normalizeAlertHeadingContainer);
+    return host.innerHTML.trim();
+  }
+    
+  // Connects toolbar buttons to the appropriate formatting handlers.
+  function bindToolbar(){
+    document.querySelectorAll('.item[data-act]').forEach(btn=>{
+      btn.addEventListener('click', ()=>execInline(btn.getAttribute('data-act')));
+    });
+    document.querySelectorAll('.item[data-align]').forEach(btn=>{
+      btn.addEventListener('click', ()=>setAlign(btn.getAttribute('data-align')));
+    });
+    document.querySelectorAll('.item[data-list]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const t=btn.getAttribute('data-list');
+        if(t==='ul') execInline('insertUnorderedList');
+        else if(t==='ol') execInline('insertOrderedList');
+        else if(t==='indent') execInline('indent');
+        else if(t==='outdent') execInline('outdent');
+      });
+    });
+    document.querySelectorAll('.item[data-block]').forEach(btn=>{
+      btn.addEventListener('click', ()=>setBlock(btn.getAttribute('data-block')));
+    });
+    document.querySelectorAll('.item[data-link]').forEach(btn=>{
+      btn.addEventListener('click', ()=>linkAction(btn.getAttribute('data-link')));
+    });
+    document.getElementById('btnNowrap').addEventListener('click', toggleNowrap);
+    document.getElementById('btnAbbr').addEventListener('click', insertAbbr);
+    document.getElementById('btnClear').addEventListener('click', ()=>clearFormatting());
+
+    document.querySelectorAll('.item[data-comp]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(isComponentDisallowedTarget(activeEditor)){
+          return;
+        }
+        const kind = btn.getAttribute('data-comp');
+        if(kind==='alert'){
+          openAlertDialog();
+        } else if(kind==='details'){
+          insertDetailsBlock();
+        }
+      });
+    });
+
+    document.addEventListener('focusin', (e)=>{
+      if(e.target.classList && e.target.classList.contains('rt-editor')){
+	  activeEditor = e.target;
+	  updateComponentsMenuState();
+	  }
+    });
+  }
+
+  // === Tab controls ===
+  // Implements the Question/Answer tab toggle behaviour.
+  function bindTabs(){
+    const tQ=document.getElementById('tab-q');
+    const tA=document.getElementById('tab-a');
+    const pQ=document.getElementById('panel-q');
+    const pA=document.getElementById('panel-a');
+    // Sets the visible tab and updates aria attributes.
+    function select(which){
+      const isQ=(which==='q');
+      tQ.setAttribute('aria-selected', isQ);
+      tA.setAttribute('aria-selected', !isQ);
+      pQ.hidden=!isQ;
+      pA.hidden=isQ;
+    }
+    tQ.addEventListener('click', ()=>select('q'));
+    tA.addEventListener('click', ()=>select('a'));
+  }
+
+  // === Application state ===
+  const state = {
+    // Rich-text intro displayed before the decision tree.
+    intro:'',
+    // Ordered list of questions with nested answer definitions.
+    questions:[],
+    // Reusable alert panels revealed by specific answers.
+    panels:[]
+  };
+  // Generates short unique identifiers with a given prefix.
+  const uid = p => p + '-' + Math.random().toString(36).slice(2,8);
+
+  // === Rendering helpers ===
+  // Helper accessors for primary collection containers.
+  const elQ = ()=>document.getElementById('questions');
+  const elA = ()=>document.getElementById('answers');
+
+  // Re-renders intro, questions, and panels from the current state snapshot.
+  function refreshAll(){
+    const introEl=document.querySelector('[data-role="intro"]');
+    if(introEl){
+      const introOriginal = state.intro || '';
+      const introNormalized = normalizeAlertsInHtml(introOriginal);
+      if(introNormalized !== introOriginal){
+        state.intro = introNormalized;
+      }
+      const currentDom = stripTailHTML(introEl.innerHTML);
+      if(currentDom !== introNormalized){
+        introEl.innerHTML = introNormalized;
+      }
+      ensureTail(introEl);
+      setupEditor(introEl);
+    }
+        if(introEl && !introEl._bound){
+      introEl._bound=true;
+      introEl.addEventListener('input', ()=>{
+        state.intro = normalizeAlertsInHtml(stripTailHTML(introEl.innerHTML));
+                        ensureTail(introEl);
+                scheduleDecorate(introEl);
+        updateOutputs();
+      });
+    }
+
+    const qWrap=elQ();
+    qWrap.innerHTML='';
+    state.questions.forEach((q, idx)=>{
+      const frag=document.getElementById('tpl-question').content.cloneNode(true);
+      const card=frag.querySelector('[data-type="question"]');
+      card.dataset.id=q.id;
+      card.querySelector('.q-index').textContent=idx+1;
+
+      const qEd=card.querySelector('[data-role="question"]');
+      const qOriginal = q.html || '';
+      const qNormalized = normalizeAlertsInHtml(qOriginal);
+      if(qNormalized !== qOriginal){
+        q.html = qNormalized;
+      }
+      qEd.innerHTML = qNormalized;
+              ensureTail(qEd);
+          setupEditor(qEd);
+      qEd.addEventListener('input', ()=>{
+        q.html = normalizeAlertsInHtml(stripTailHTML(qEd.innerHTML));
+                  ensureTail(qEd);
+                scheduleDecorate(qEd);
+        updateOutputs();
+      });
+
+      const dEd=card.querySelector('[data-role="qdesc"]');
+      if(dEd){
+        const descOriginal = q.descHtml || '';
+        const descNormalized = normalizeAlertsInHtml(descOriginal);
+        if(descNormalized !== descOriginal){
+          q.descHtml = descNormalized;
+        }
+        dEd.innerHTML=descNormalized;
+                  ensureTail(dEd);
+                setupEditor(dEd);
+        dEd.addEventListener('input', ()=>{
+          q.descHtml = normalizeAlertsInHtml(stripTailHTML(dEd.innerHTML));
+                    ensureTail(dEd);
+                  scheduleDecorate(dEd);
+          updateOutputs();
+        });
+      }
+
+      const ansWrap=card.querySelector('.answers');
+      q.answers.forEach(a => ansWrap.appendChild(renderAnswerOption(q.id, a)));
+
+      card.querySelector('[data-act="add-answer"]').addEventListener('click', ()=>{
+        q.answers.push({ id: uid('ans'), text:'', action:'panel', panelId: state.panels[0]?.id || null, nextId:null, classes:'' });
+        refreshAll();
+        updateOutputs();
+      });
+      card.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+        state.questions = state.questions.filter(x=>x.id!==q.id);
+        state.questions.forEach(qq=>qq.answers.forEach(a=>{ if(a.nextId===q.id) a.nextId=null; }));
+        refreshAll();
+        updateOutputs();
+      });
+      card.querySelector('[data-act="dup"]').addEventListener('click', ()=>{
+        const copy=JSON.parse(JSON.stringify(q)); copy.id=uid('q'); copy.answers.forEach(a=>a.id=uid('ans'));
+        state.questions.splice(idx+1,0,copy);
+        refreshAll();
+        updateOutputs();
+      });
+
+      qWrap.appendChild(frag);
+    });
+
+    const aWrap=elA();
+    aWrap.innerHTML='';
+    state.panels.forEach((p, idx)=> aWrap.appendChild(renderAnswerPanel(p, idx)) );
+
+    syncPanelSelects();
+    document.querySelectorAll('select[data-role="nextQuestion"]').forEach(sel=>{
+      const opt=sel.closest('[data-type="answer-option"]');
+      const owner=opt?.dataset.owner;		
+      populateQuestionSelect(sel, owner);
+	  if(opt && owner){
+        const ansId=opt.dataset.id;
+        const q=state.questions.find(x=>x.id===owner);
+        const ans=q?.answers.find(a=>a.id===ansId);
+        sel.value=ans?.nextId || '';
+      }
+    });
+
+    updateOutputs();
+  }
+
+  // Builds the UI block for a single answer option within a question.
+  function renderAnswerOption(qId, ans){
+    const node=document.getElementById('tpl-answer-option').content.cloneNode(true);
+    const root=node.querySelector('[data-type="answer-option"]');
+    root.dataset.id=ans.id;
+    root.dataset.owner=qId;
+
+    const txt=root.querySelector('[data-role="answer-text"]');
+    txt.innerHTML = ans.text || '';
+	  ensureTail(txt);
+	setupEditor(txt);
+    txt.addEventListener('input', ()=>{
+      ans.text = stripTailHTML(txt.innerHTML);
+	    ensureTail(txt);
+	  scheduleDecorate(txt);
+      updateOutputs();
+    });
+
+    const selAction=root.querySelector('[data-role="action"]');
+    const scopePanel=root.querySelector('[data-scope="panel"]');
+    const scopeGoto=root.querySelector('[data-scope="goto"]');
+    selAction.value=ans.action||'panel';
+    // Switches visibility between panel and goto settings.
+    function toggle(){
+      const isPanel=selAction.value==='panel';
+      scopePanel.hidden=!isPanel;
+      scopeGoto.hidden=isPanel;
+    }
+    selAction.addEventListener('change', ()=>{
+      ans.action=selAction.value;
+      toggle();
+      updateOutputs();
+    });
+    toggle();
+
+    const selPanel=root.querySelector('[data-role="panelRef"]');
+    populatePanelSelect(selPanel, ans.panelId || '');
+    selPanel.addEventListener('change', ()=>{
+      ans.panelId=selPanel.value||null;
+      updateOutputs();
+    });
+
+    const selNext=root.querySelector('[data-role="nextQuestion"]');
+    populateQuestionSelect(selNext, qId);
+    selNext.value=ans.nextId||'';
+    selNext.addEventListener('change', ()=>{
+      ans.nextId=selNext.value||null;
+      updateOutputs();
+    });
+
+    const classes=root.querySelector('[data-role="classes"]');
+    classes.value=ans.classes||'';
+    classes.addEventListener('input', ()=>{
+      ans.classes=classes.value.trim();
+      updateOutputs();
+    });
+
+    root.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+      const q=state.questions.find(x=>x.id===qId);
+      q.answers=q.answers.filter(a=>a.id!==ans.id);
+      refreshAll();
+      updateOutputs();
+    });
+    root.querySelector('[data-act="dup"]').addEventListener('click', ()=>{
+      const q=state.questions.find(x=>x.id===qId);
+      const copy=JSON.parse(JSON.stringify(ans)); copy.id=uid('ans');
+      q.answers.splice(q.answers.indexOf(ans)+1,0,copy);
+      refreshAll();
+      updateOutputs();
+    });
+
+    return node;
+  }
+
+  // Renders the editor UI for an answer panel definition.
+  function renderAnswerPanel(p, idx){
+    const node=document.getElementById('tpl-answer-panel').content.cloneNode(true);
+    const card=node.querySelector('[data-type="panel"]');
+    card.querySelector('.a-index').textContent=idx+1;
+
+    const upgraded = upgradePanelRecord(p);
+    Object.assign(p, upgraded);
+    card.dataset.id=p.id;
+
+    const idInput=card.querySelector('[data-role="panelId"]');
+    idInput.value=p.id;
+    idInput.addEventListener('input', ()=>{
+      const old=p.id;
+      const nextId=idInput.value.trim();
+      if(old===nextId) return;
+      p.id=nextId;
+      card.dataset.id=p.id;
+      state.questions.forEach(q=>q.answers.forEach(a=>{
+        if(a.panelId===old) a.panelId=p.id;
+      }));
+      syncPanelSelects();		
+      updateOutputs();
+    });
+
+    const sty=card.querySelector('[data-role="panelStyle"]');
+    sty.value=p.style||'info';
+    sty.addEventListener('change', ()=>{
+      p.style=sty.value;
+      updateOutputs();
+    });
+
+    const headingSel = card.querySelector('[data-role="panelHeadingLevel"]');
+    const headingWrap = card.querySelector('[data-role="panelHeadingWrap"]');
+    const headingInput = card.querySelector('[data-role="panelHeadingText"]');
+
+    // Toggles visibility of heading text input based on selected level.
+    const updateHeadingWrapState = ()=>{
+      if(headingWrap){
+        const level = headingSel ? headingSel.value : 'none';
+        headingWrap.hidden = !ALERT_HEADING_LEVELS.includes(level);
+      }
+    };
+
+    if(headingSel){
+      const level = ALERT_HEADING_LEVELS.includes(p.headingLevel) ? p.headingLevel : 'none';
+      headingSel.value = level;
+      headingSel.addEventListener('change', ()=>{
+        const value = ALERT_HEADING_LEVELS.includes(headingSel.value) ? headingSel.value : 'none';
+        p.headingLevel = value;
+        updateHeadingWrapState();
+        updateOutputs();
+      });
+    }
+
+    if(headingInput){
+      headingInput.value = p.headingText || '';
+      headingInput.addEventListener('input', ()=>{
+        p.headingText = headingInput.value;
+        updateOutputs();
+      });
+    }
+
+    updateHeadingWrapState();
+
+    const body=card.querySelector('[data-role="panelBody"]');
+    body.innerHTML = p.bodyHTML || '';
+          ensureTail(body);
+        setupEditor(body);
+    body.addEventListener('input', ()=>{
+      const cleaned = normalizeAlertBodyHTMLString(stripTailHTML(body.innerHTML));
+      const host = document.createElement('div');
+      host.innerHTML = cleaned;
+      const headingNode = findAlertHeading(host);
+      if(headingNode){
+        const derivedLevel = getAlertHeadingAppearance(headingNode);
+        const derivedText = headingNode.textContent.trim();
+        headingNode.remove();
+        if(ALERT_HEADING_LEVELS.includes(derivedLevel)){
+          p.headingLevel = derivedLevel;
+          if(headingSel) headingSel.value = derivedLevel;
+          if(headingWrap) headingWrap.hidden = false;
+        }
+        if(headingInput){
+          headingInput.value = derivedText;
+        }
+        p.headingText = derivedText;
+      }
+      p.bodyHTML = host.innerHTML.trim();
+            ensureTail(body);
+          scheduleDecorate(body);
+      updateHeadingWrapState();
+      updateOutputs();
+    });
+
+    card.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+      const id=p.id;
+      state.panels=state.panels.filter(x=>x!==p);
+      state.questions.forEach(q=>q.answers.forEach(a=>{ if(a.panelId===id) a.panelId=null; }));
+      refreshAll();
+      updateOutputs();
+    });
+    card.querySelector('[data-act="dup"]').addEventListener('click', ()=>{
+      const copy=JSON.parse(JSON.stringify(p)); copy.id=incrementId(copy.id);
+      state.panels.splice(idx+1,0,copy);
+      refreshAll();
+      updateOutputs();
+    });
+
+    return node;
+  }
+
+  // Fills the answer panel dropdown while keeping the current selection.
+  function populatePanelSelect(sel, selectedId){
+    const desired = typeof selectedId === 'string'
+      ? selectedId
+      : selectedId === null
+        ? ''
+        : sel.value;
+    sel.innerHTML = '<option value="">— Select an answer panel —</option>' +
+      state.panels.map(p=>`<option value="${escapeHtml(p.id)}">${escapeHtml(p.id)}</option>`).join('');
+    if(desired && !state.panels.some(p=>p.id === desired)){
+      sel.value = '';
+    }else{
+      sel.value = desired || '';
+    }
+  }
+
+  // Lists other questions for goto routing in an answer option.
+  function populateQuestionSelect(sel, owner){
+    const v=sel.value;
+    sel.innerHTML = '<option value="">— Select a question —</option>' +
+      state.questions.filter(q=>q.id!==owner).map(q=>`<option value="${q.id}">${getQuestionPlain(q)}</option>`).join('');
+    sel.value=v;
+  }
+
+  // Keeps all answer panel dropdowns synchronized with current state.
+  function syncPanelSelects(){
+    document.querySelectorAll('select[data-role="panelRef"]').forEach(sel=>{
+      const opt=sel.closest('[data-type="answer-option"]');
+      const owner=opt?.dataset.owner;
+      let selected = sel.value;
+      if(opt && owner){
+        const ansId=opt.dataset.id;
+        const q=state.questions.find(x=>x.id===owner);
+        const ans=q?.answers.find(a=>a.id===ansId);
+        if(ans){
+          selected = ans.panelId || '';
+        }
+      }
+      populatePanelSelect(sel, selected);
+    });
+  }
+
+  // Returns a trimmed plain-text preview of a question label.
+  function getQuestionPlain(q){
+    const tmp=document.createElement('div'); tmp.innerHTML=q.html||'';
+    const t=tmp.textContent.trim().replace(/\s+/g,' ');
+    return t ? (t.length>80?t.slice(0,77)+'…':t) : '(untitled question)';
+  }
+
+  // Produces a new identifier by incrementing a numeric suffix.
+  function incrementId(id){
+    if(!id) return uid('answer');
+    const m=id.match(/(.*?)(\d+)$/);
+    return m ? m[1]+(Number(m[2])+1) : id+'-1';
+  }
+  
+  // Normalizes markup allowed inside answer labels.
+  function sanitizeBlockHTML(html){
+    const host=document.createElement('div'); host.innerHTML=html||'';
+    host.querySelectorAll('.component-tools').forEach(n=>n.remove());
+    host.querySelectorAll('[data-component]').forEach(n=>{
+      n.removeAttribute('data-component');
+      n.removeAttribute('data-alert-type');
+    });
+	  
+    const ALLOWED=new Set(['P','UL','OL','LI','A','ABBR','SPAN','B','STRONG','I','EM','U','S','SUP','SUB','CODE','BR']);
+
+    // Replaces an element with its children while preserving order.
+    // Lifts children out of disallowed containers.
+    function unwrap(el){
+      const p=el.parentNode;
+      while(el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+    }
+
+    // Recursively validates and sanitizes nodes against the allowed set.
+    // Validates inline-only markup recursively.
+    function walk(node){
+      if(node.nodeType!==Node.ELEMENT_NODE) return;
+      const el=node;
+
+      if(!ALLOWED.has(el.tagName)){
+        const kids=[...el.childNodes];
+        unwrap(el);
+        kids.forEach(walk);
+        return;
+      }
+
+      if(el.tagName==='A'){
+        const href=el.getAttribute('href')||'';
+        const safe=/^(https?:|mailto:|tel:|#)/i.test(href);
+        [...el.attributes].forEach(a=>el.removeAttribute(a.name));
+        if(safe) el.setAttribute('href', href);
+        el.setAttribute('rel','noopener noreferrer');
+      }else if(el.tagName==='SPAN'){
+        if(!el.classList.contains('nowrap')){
+          const kids=[...el.childNodes];
+          unwrap(el);
+          kids.forEach(walk);
+          return;
+        }
+        el.className='nowrap';
+        [...el.attributes].forEach(a=>{ if(a.name!=='class') el.removeAttribute(a.name); });
+      }else if(el.tagName==='ABBR'){
+        const title=el.getAttribute('title');
+        [...el.attributes].forEach(a=>el.removeAttribute(a.name));
+        if(title) el.setAttribute('title', title);
+      }else{
+        [...el.attributes].forEach(a=>el.removeAttribute(a.name));
+      }
+
+      [...el.childNodes].forEach(walk);
+    }
+
+    host.querySelectorAll('h1,h2,h3,h4,h5,h6,div,section,article,header,footer,details,summary').forEach(unwrap);
+    [...host.childNodes].forEach(walk);
+
+    host.querySelectorAll('p').forEach(p => {
+      const cleaned = p.innerHTML.replace(/(?:<br\s*\/?>(?:&nbsp;|\s)*)+$/gi, '').trim();
+      p.innerHTML = cleaned;
+
+      if(!p.textContent.trim() && !p.querySelector('img,ul,ol,li,details')){
+        p.remove();
+      }
+    });
+
+    return host.innerHTML.trim();
+  }
+
+  // Restricts question labels to safe inline markup while preserving formatting.
+  function sanitizeInlineHTML(html){
+    const host = document.createElement('div');
+    host.innerHTML = html || '';
+
+    const ALLOWED = new Set(['B','STRONG','I','EM','U','S','ABBR','A','SPAN','SUP','SUB','CODE','BR']);
+
+    const unwrap = (el) => {
+      const parent = el.parentNode;
+      while(el.firstChild) parent.insertBefore(el.firstChild, el);
+      parent.removeChild(el);
+    };
+
+    const walk = (node) => {
+      if(node.nodeType !== Node.ELEMENT_NODE) return;
+      const el = node;
+
+      if(!ALLOWED.has(el.tagName)){
+        const kids = [...el.childNodes];
+        unwrap(el);
+        kids.forEach(walk);
+        return;
+      }
+
+      if(el.tagName === 'A'){
+        const href = el.getAttribute('href') || '';
+        const safe = /^(https?:|mailto:|tel:|#)/i.test(href);
+        [...el.attributes].forEach(a => el.removeAttribute(a.name));
+        if(safe) el.setAttribute('href', href);
+        el.setAttribute('rel', 'noopener noreferrer');
+      }else if(el.tagName === 'SPAN'){
+        if(!el.classList.contains('nowrap')){
+          const kids = [...el.childNodes];
+          unwrap(el);
+          kids.forEach(walk);
+          return;
+        }
+        el.className = 'nowrap';
+        [...el.attributes].forEach(a => { if(a.name !== 'class') el.removeAttribute(a.name); });
+      }else if(el.tagName === 'ABBR'){
+        const title = el.getAttribute('title');
+        [...el.attributes].forEach(a => el.removeAttribute(a.name));
+        if(title) el.setAttribute('title', title);
+      }else{
+        [...el.attributes].forEach(a => el.removeAttribute(a.name));
+      }
+
+      [...el.childNodes].forEach(walk);
+    };
+
+    host.querySelectorAll('p,div,section,article,header,footer,ul,ol,li,h1,h2,h3,h4,h5,h6,details,summary')
+        .forEach(unwrap);
+
+    [...host.childNodes].forEach(walk);
+
+    return host.innerHTML.trim();
+  }
+
+  // Normalizes question labels, preserving block structures like lists and
+  // ensuring the leading paragraph carries the wb-fieldflow-label class.
+  function sanitizeQuestionLabelHTML(html){
+    const sanitized = sanitizeBlockHTML(html);
+    if(!sanitized) return '';
+
+    const host = document.createElement('div');
+    host.innerHTML = sanitized;
+
+    let firstParagraph = host.querySelector('p');
+
+    if(firstParagraph){
+      host.insertBefore(firstParagraph, host.firstChild);
+    }else{
+      const blockLevel = new Set(['UL','OL','LI','TABLE','SECTION','ARTICLE','DIV','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','DETAILS','SUMMARY']);
+      const para = document.createElement('p');
+      const nodes = [...host.childNodes];
+
+      nodes.forEach(node => {
+        if(node.nodeType === Node.TEXT_NODE){
+          const text = node.textContent.replace(/\s+/g, ' ').trim();
+          if(text){
+            const textNode = document.createTextNode(text);
+            para.appendChild(textNode);
+          }
+          node.remove();
+        }else if(node.nodeType === Node.ELEMENT_NODE && !blockLevel.has(node.tagName)){
+          para.appendChild(node);
+        }
+      });
+
+      if(!para.childNodes.length){
+        const fallbackText = sanitized.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if(fallbackText){
+          para.textContent = fallbackText;
+        }
+      }
+
+      host.insertBefore(para, host.firstChild);
+      firstParagraph = para;
+    }
+
+    host.querySelectorAll('p').forEach((p, idx) => {
+      if(idx === 0){
+        p.classList.add('wb-fieldflow-label');
+      }else{
+        p.classList.remove('wb-fieldflow-label');
+      }
+    });
+
+    return host.innerHTML.trim();
+  }
+
+  // Harmonizes exported rich-text blocks into predictable structure.
+  function normalizeBlockHTML(html){
+    const host = document.createElement('div');
+    host.innerHTML = html || '';
+    host.querySelectorAll('.component-tools').forEach(n=>n.remove());
+    host.querySelectorAll('[data-component]').forEach(n=>{
+      n.removeAttribute('data-component');
+      n.removeAttribute('data-alert-type');
+    });
+	  
+    // Removes wrapper elements while preserving their children.
+    const unwrap = (el) => {
+      const parent = el.parentNode;
+      while(el.firstChild) parent.insertBefore(el.firstChild, el);
+      parent.removeChild(el);
+    };
+
+    host.querySelectorAll('span:not(.nowrap), font, b[style], i[style]').forEach(unwrap);
+
+    [...host.childNodes].forEach(n=>{
+      if(n.nodeType === Node.TEXT_NODE && n.textContent.trim()){
+        const p = document.createElement('p');
+        p.textContent = n.textContent.trim();
+        host.replaceChild(p, n);
+      }
+    });
+
+    [...host.children].forEach(el=>{
+      if(el.tagName === 'DIV' && el.attributes.length === 0){
+        [...el.childNodes].forEach(n=>{
+          if(n.nodeType === Node.TEXT_NODE && n.textContent.trim()){
+            const p = document.createElement('p');
+            p.textContent = n.textContent.trim();
+            el.replaceChild(p, n);
+          }
+        });
+        unwrap(el);
+      }
+    });
+
+    host.querySelectorAll('p > ul, p > ol').forEach(list=>{
+      const p = list.parentElement;
+      p.after(list);
+    });
+
+    [...host.children].forEach(el=>{
+      const isList = /^(UL|OL)$/i.test(el.tagName);
+      if(!isList){
+        const text = el.textContent.replace(/\u200b/g,'').trim();
+        if(!text) el.remove();
+      }
+    });
+
+    [...host.children].forEach(el=>{
+      if(el.tagName === 'DIV' && el.attributes.length === 0){
+        unwrap(el);
+      }
+    });
+
+    host.querySelectorAll('section.alert').forEach(normalizeAlertHeadingContainer);
+
+   return host.innerHTML.trim();
+  }
+
+
+
+  // === Export and preview ===
+  // Generates the final HTML output for questions, answers, and panels.
+  function exportAsString(){
+    const alertsClass = 'alert1';
+
+    const byId = id => state.questions.find(q => q.id === id);
+    const textOnly = html => {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html || '';
+      return tmp.textContent.trim();
+    };
+    const qLabel = q => {
+      const source = q.html || '';
+      const block = sanitizeQuestionLabelHTML(source);
+      if(block) return block;
+      const text = textOnly(source);
+      const fallback = text ? escapeHtml(text) : 'Question';
+      return `<p class="wb-fieldflow-label">${fallback}</p>`;
+    };
+    const qDesc  = q => normalizeBlockHTML(q.descHtml || '');
+
+    // Serializes fieldflow configuration attributes for list items.
+    function attrFieldflow({ live=false, noForm=false } = {}){
+       return `{&quot;renderas&quot;:&quot;radio&quot;, &quot;gcChckbxrdio&quot;:true` +
+              (noForm ? `, &quot;noForm&quot;: true` : ``) +
+              `, &quot;isoptional&quot;: true, ` +
+              `&quot;reset&quot;: {&quot;action&quot;: &quot;addClass&quot;, ` +
+              `&quot;source&quot;: &quot;.${alertsClass}&quot;, ` +
+              `&quot;class&quot;: &quot;hidden&quot;` +
+              (live ? `, &quot;live&quot;: true` : ``) +
+              `}}`;
+     }
+
+    // Outputs list item markup for every answer in a question.
+    function renderAnswers(q){
+      const out = [];
+      q.answers.forEach((a, i) => {
+        const labelHtml = sanitizeBlockHTML(a.text || '') || `<p>Option ${i+1}</p>`;
+		const classAttr = a.classes ? ` class="${escapeHtml(a.classes)}"` : ''; 
+
+        if (a.action === 'panel' && a.panelId){
+          out.push(`<li${classAttr} data-wb-fieldflow="{&quot;action&quot;:&quot;removeClass&quot;,&quot;source&quot;:&quot;#${a.panelId}&quot;,&quot;class&quot;:&quot;hidden&quot;,&quot;live&quot;:true}">${labelHtml}</li>`);
+		} else if (a.action === 'goto' && a.nextId){
+          const nextQ = byId(a.nextId);
+          if (nextQ){
+            out.push(`<li${classAttr}>${labelHtml}
+            ${renderSubQuestion(nextQ)}
+            </li>`);
+          } else {
+            out.push(`<li${classAttr}>${labelHtml}</li>`);
+          }
+        } else {
+          out.push(`<li${classAttr}>${labelHtml}</li>`);
+        }
+      });
+      return out.join('\n');
+    }
+
+    // Builds nested markup for goto-style follow-up questions.
+    function renderSubQuestion(q){
+      const parts = [];
+      parts.push(
+        `<div class="wb-fieldflow-sub" data-wb-fieldflow="${attrFieldflow({ live:false, noForm:false })}">`
+      );
+      parts.push(
+        `<div class="wb-fieldflow-header">
+          ${qLabel(q)}` +
+          (qDesc(q) ? `<div class="gc-font-2019">
+    ${qDesc(q)}
+    </div>` : ``) +
+        `</div>`
+      );
+      parts.push(`<ul>`);
+      parts.push(renderAnswers(q));
+     parts.push(`</ul></div>`);
+      return parts.join('\n');
+    }
+
+    // Renders the interactive question tree structure.
+    function buildTree(){
+      const parts = [];
+      parts.push(`<div class="wb-frmvld gc-font-2019" id="interactive">`);
+      parts.push(`  <form>`);
+      parts.push(`    <div class="wb-fieldflow" data-wb-fieldflow="${attrFieldflow({ live:true, noForm:true })}">`);
+      if (state.questions.length){
+        const root = state.questions[0];
+        parts.push(
+          `      <div class="wb-fieldflow-header">
+                ${qLabel(root)}` +
+                (qDesc(root) ? `<div class="gc-font-2019">
+        ${qDesc(root)}
+        </div>` : ``) +
+              `</div>`
+        );
+
+        parts.push(`      <ul>`);
+        parts.push(renderAnswers(root));
+        parts.push(`      </ul>`);
+      } else {
+        parts.push(
+          `      <div class="wb-fieldflow-header">
+            <p class="wb-fieldflow-label"> Question 1 </p>
+          </div>
+          <ul><li> Yes </li><li> No </li></ul>`
+        );
+      }
+
+      parts.push(`    </div>`);
+      parts.push(`  </form>`);
+      parts.push(`</div>`);
+      return parts.join('\n');
+    }
+
+    // Renders standalone alert panels referenced by answers.
+    function buildPanels(){
+      const parts = [];
+      state.panels.forEach(p=>{
+        const cls = p.style==='info' ? 'alert-info'
+                 : p.style==='success' ? 'alert-success'
+                 : p.style==='warning' ? 'alert-warning'
+                 : 'alert-danger';
+        const headingMarkup = buildAlertHeadingMarkup(
+          ALERT_HEADING_LEVELS.includes(p.headingLevel) ? p.headingLevel : 'none',
+          p.headingText || ''
+        );
+        const body = normalizeBlockHTML(p.bodyHTML || '');
+        const inner = [headingMarkup, body].filter(Boolean).join('\n');
+        const innerBlock = inner ? `\n${inner.replace(/^/gm, '  ')}\n` : '\n';
+        parts.push(
+          `<div id="${escapeHtml(p.id)}" class="hidden alert ${cls} alert1">${innerBlock}</div>`
+        );
+      });
+      return parts.join('\n');
+    }
+
+    const introHtml = normalizeBlockHTML(state.intro);
+	const intro = introHtml ? `${introHtml}\n` : '';
+    return `${intro}${buildTree()}\n${buildPanels()}\n`;
+  }
+  
+  // Formats the exported HTML with line breaks between tags.
+  function pretty(html){
+    return html
+      .replace(/>\s*</g, '>\n<')
+      .trim();
+  }
+  
+  // Refreshes the generated HTML preview output.
+  function updateCode(){
+    const pre=document.getElementById('codeOut');
+    if(pre) pre.textContent = pretty(exportAsString());
+  }
+  // Convenience wrapper to refresh derived outputs after state changes.
+  function updateOutputs(){ updateCode(); }
+
+  // Opens a live preview window with the generated markup and WET assets.
+  function bindPreview(){
+    document.getElementById('btnPreview').addEventListener('click', ()=>{
+      const w = window.open('', '_blank');
+      w.document.open();
+      const previewMarkup = [
+        '<!doctype html>',
+        '<html lang="en">',
+        '<head>',
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        '<title>Preview</title>',
+        '<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/wet-boew.min.css">',
+        '<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/méli-mélo/2024-09-kejimkujik.min.css">',
+        '<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css">',
+        '</head>',
+        '<body class="cnt-wdth-lm" vocab="http://schema.org/" typeof="WebPage">',
+        '<main property="mainContentOfPage" typeof="WebPageElement" class="container mrgn-tp-lg mrgn-bttm-lg"></main>',
+        '<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"><\/script>',
+        '<script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/ep-pp.min.js"><\/script>',
+        '<script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/wet-boew.min.js"><\/script>',
+        '<script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/theme.min.js"><\/script>',
+        '<script src="https://www.canada.ca/etc/designs/canada/wet-boew/méli-mélo/2024-09-kejimkujik.min.js"><\/script>',
+        '<span id="wb-rsz" class="wb-init">&nbsp;</span>',
+        '</body>',
+        '</html>'
+      ].join('');
+      w.document.write(previewMarkup);
+      w.document.close();
+
+      const doc = w.document;
+      const container = doc.querySelector('main.container');
+      if (container){
+        container.innerHTML = exportAsString();
+      }
+
+      let initialized = false;
+      const init = () => {
+        if (initialized) return;
+        if (w.jQuery && w.wb){
+          initialized = true;
+          const $ = w.jQuery;
+          const $doc = $(doc);
+          const tree = doc.querySelector('#interactive .wb-fieldflow');
+          if (tree) {
+            $doc.trigger('wb-init.wb-fieldflow', [$(tree)]);
+          }
+          const $interactive = $('#interactive');
+          if ($interactive.length) {
+            $doc.trigger('wb-init.wb-frmvld', [$interactive]);
+            $doc.trigger('wb-init.gc-chckbxrdio', [$interactive]);
+          }
+        }
+      };
+
+      const scripts = Array.from(doc.querySelectorAll('script[src]'));
+      scripts.forEach(script => {
+        script.addEventListener('load', init);
+      });
+      w.addEventListener('load', init);
+      init();
+    });
+  }
+
+  // === Copy generated code ===
+  // Enables copying the generated HTML to the clipboard or fallback download.
+  function bindCopy(){
+    const btn=document.getElementById('btnCopyCode');
+    btn.addEventListener('click', async ()=>{
+      const code = document.getElementById('codeOut').textContent || '';
+      try{
+        await navigator.clipboard.writeText(code);
+        btn.textContent='Copied!';
+        setTimeout(()=>btn.textContent='Copy code', 900);
+      }catch(e){
+        const blob=new Blob([code],{type:'text/plain;charset=utf-8'});
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download='fieldflow.html';
+        a.click();
+        setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      }
+    });
+  }
+
+  // === Save and load JSON state ===
+  // Produces a JSON snapshot of the builder state for saving.
+  function serializeState(){
+    return JSON.stringify({
+      version:1,
+      intro: state.intro || '',
+      questions: state.questions || [],
+      panels: state.panels || []
+    }, null, 2);
+  }
+
+  // Restores builder state from a serialized JSON string.
+  function deserializeState(json){
+    const data = JSON.parse(json);
+    if (!data || typeof data !== 'object') throw new Error('Invalid JSON');
+    if (!Array.isArray(data.questions) || !Array.isArray(data.panels)) throw new Error('Missing arrays');
+
+    state.intro = normalizeAlertsInHtml(data.intro || '');
+    state.questions = data.questions;
+    state.questions.forEach(q => {
+      if(q && typeof q === 'object'){
+        q.html = normalizeAlertsInHtml(q.html || '');
+        q.descHtml = normalizeAlertsInHtml(q.descHtml || '');
+      }
+    });
+    state.panels = (data.panels || []).map(panel => upgradePanelRecord(panel));
+
+    const introEl=document.querySelector('[data-role="intro"]');
+    if(introEl){
+      introEl.innerHTML = state.intro || '';
+                    ensureTail(introEl);
+      setupEditor(introEl);
+      scheduleDecorate(introEl);
+    }   
+
+    refreshAll();
+    updateOutputs();
+  }
+
+  // Hooks up the save (JSON download) and load (JSON upload) actions.
+  function bindSaveLoad(){
+    const btnSave=document.getElementById('btnSave');
+    const btnLoad=document.getElementById('btnLoad');
+    const fileInput=document.getElementById('fileLoad');
+
+    btnSave.addEventListener('click', ()=>{
+      const blob=new Blob([serializeState()],{type:'application/json;charset=utf-8'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='decision-tree.json';
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    });
+
+    btnLoad.addEventListener('click', ()=>fileInput.click());
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f){ fileInput.value=''; return; }
+      const reader=new FileReader();
+      reader.onload = () => {
+        try{
+          deserializeState(reader.result);
+        }catch(err){
+          alert('Could not load: ' + err.message);
+        }
+      };
+      reader.readAsText(f);
+      fileInput.value='';
+    });
+  }
+
+  // === Import exported HTML ===
+  // Enables importing generator output back into the editor UI.
+  function bindPasteHtml(){
+    const openBtn = document.getElementById('btnPasteHtml');
+    const dlg     = document.getElementById('dlgPasteHtml');
+    const ta      = document.getElementById('taPasteHtml');
+    const importBtn = dlg.querySelector('[data-act="import"]');
+    const clearBtn  = dlg.querySelector('[data-act="clear"]');
+
+    openBtn.addEventListener('click', ()=>{
+      ta.value = '';
+      dlg.showModal();
+      setTimeout(()=>ta.focus(), 0);
+    });
+
+    clearBtn.addEventListener('click', ()=> ta.value = '');
+
+    importBtn.addEventListener('click', ()=>{
+      try{
+        const html = ta.value.trim();
+        if(!html){ alert('Paste some HTML first.'); return; }
+        importFromHtml(html);
+        dlg.close();
+      }catch(err){
+        console.error(err);
+        alert('Could not import HTML: ' + err.message);
+      }
+    });
+
+    dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); dlg.close(); });
+  }
+
+
+  // Parses exported Fieldflow markup back into application state.
+  function importFromHtml(html){
+    const host = document.createElement('div');
+    host.innerHTML = html;
+
+    let introHtml = '';
+    const legacyIntro = host.querySelector('section.gc-font-2019');
+
+    if (legacyIntro) {
+      introHtml = legacyIntro.innerHTML.trim();
+    } else {
+      const firstFF = host.querySelector('.wb-frmvld .wb-fieldflow, .wb-fieldflow');
+      if (firstFF) {
+        let wrapper = firstFF;
+        while (wrapper.parentElement && wrapper.parentElement !== host) {
+          wrapper = wrapper.parentElement;
+        }  
+        const parts = [];
+        for (let n = host.firstChild; n && n !== wrapper; n = n.nextSibling) {
+          if (n.nodeType === Node.ELEMENT_NODE) {
+            parts.push(n.outerHTML);
+          } else if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) {
+            parts.push(`<p>${n.textContent.trim()}</p>`);
+          }
+        }
+        introHtml = parts.join('\n').trim();
+      }
+    }
+    state.intro = normalizeAlertsInHtml(introHtml);
+
+
+    const panelDivs = host.querySelectorAll('.alert.alert1');
+    const panels = [];
+    panelDivs.forEach(div=>{
+      const id = div.getAttribute('id') || uid('answer');
+      let style = 'info';
+      if(div.classList.contains('alert-success')) style='success';
+      else if(div.classList.contains('alert-warning')) style='warning';
+      else if(div.classList.contains('alert-danger')) style='danger';
+      const bodyHTML = div.innerHTML.trim();
+      panels.push(upgradePanelRecord({ id, style, bodyHTML }));
+    });
+
+    const top = host.querySelector('.wb-frmvld .wb-fieldflow, .wb-fieldflow');
+    if(!top) throw new Error('Could not find .wb-fieldflow block');
+
+    const qState = [];
+    function extractLeadingQuestionMarkup(container){
+      const parts = [];
+      for(let node = container.firstChild; node; node = node.nextSibling){
+        if(node.nodeType === Node.ELEMENT_NODE && node.matches('ul')){
+          break;
+        }
+        if(node.nodeType === Node.ELEMENT_NODE){
+          const html = node.outerHTML.trim();
+          if(html) parts.push(html);
+        }else if(node.nodeType === Node.TEXT_NODE){
+          const txt = node.textContent.trim();
+          if(txt) parts.push(`<p>${escapeHtml(txt)}</p>`);
+        }
+      }
+      return parts.join('').trim();
+    }
+    // Converts a nested .wb-fieldflow-sub node into a question object.
+    function parseQuestionBlock(sub){
+      const header = sub.querySelector('.wb-fieldflow-header');
+      const lbl = header?.querySelector('.wb-fieldflow-label');
+      const descWrap = header?.querySelector('.gc-font-2019');
+      let qHtml = lbl ? normalizeAlertsInHtml(lbl.innerHTML.trim()) : '';
+      let qDescHtml = descWrap ? normalizeAlertsInHtml(descWrap.innerHTML.trim()) : '';
+      if(!header){
+        const fallbackHtml = extractLeadingQuestionMarkup(sub);
+        if(fallbackHtml){
+          qHtml = normalizeAlertsInHtml(fallbackHtml);
+          qDescHtml = '';
+        }
+      }
+      const q = { id: uid('q'), html: qHtml, descHtml: qDescHtml, answers: [] };
+      qState.push(q);
+      const liAnswers = sub.querySelectorAll(':scope > ul > li');
+
+      liAnswers.forEach(li=>{
+        const data = li.getAttribute('data-wb-fieldflow') || '';
+        const cfg = parseFieldflowData(data);
+        const action = typeof cfg?.action === 'string' ? cfg.action.trim().toLowerCase() : '';
+        const sourceRaw = typeof cfg?.source === 'string' ? cfg.source.trim() : '';
+        const sourceId = sourceRaw.startsWith('#') ? sourceRaw.slice(1) : sourceRaw;
+        const labelNode = li.cloneNode(true);
+        labelNode.querySelectorAll('.wb-fieldflow-sub').forEach(node => node.remove());
+        let labelHtml = labelNode.innerHTML.trim();
+        if(!labelHtml){
+          const txt = li.textContent.trim();
+          labelHtml = txt ? `<p>${escapeHtml(txt)}</p>` : '';
+        }
+        const classes = (li.getAttribute('class') || '').trim();
+
+        if(action === 'removeclass' && sourceId){
+          q.answers.push({
+            id: uid('ans'),
+            text: labelHtml,
+            action: 'panel',
+            panelId: sourceId || null,
+            nextId: null,
+            classes
+          });
+        }else if(li.querySelector('.wb-fieldflow-sub')){
+          const nestedSub = li.querySelector('.wb-fieldflow-sub');
+          const nestedQ = parseQuestionBlock(nestedSub);
+          q.answers.push({
+            id: uid('ans'),
+            text: labelHtml,
+            action: 'goto',
+            panelId: null,
+            nextId: nestedQ.id,
+            classes
+          });
+        }else{
+          q.answers.push({
+            id: uid('ans'),
+            text: labelHtml,
+            action: 'panel',
+            panelId: null,
+            nextId: null,
+            classes
+          });
+        }
+      });
+
+      return q;
+    }
+
+    const rootHeader = top?.querySelector('.wb-fieldflow-header');
+    let firstQuestion = null;
+    if(top){
+      let rootLabel = (rootHeader?.querySelector('.wb-fieldflow-label')?.innerHTML || '').trim();
+      let rootDesc = (rootHeader?.querySelector('.gc-font-2019')?.innerHTML || '').trim();
+      if(!rootHeader){
+        const fallbackHtml = extractLeadingQuestionMarkup(top);
+        if(fallbackHtml){
+          rootLabel = fallbackHtml;
+          rootDesc = '';
+        }
+      }
+      const hasQuestionContent = rootLabel || rootDesc;
+      if(hasQuestionContent || top.querySelector(':scope > ul > li')){
+        const rootQ = { id: uid('q'),
+          html: normalizeAlertsInHtml(rootLabel),
+          descHtml: normalizeAlertsInHtml(rootDesc),
+          answers: []
+        };
+        const rootLis = top.querySelectorAll(':scope > ul > li');
+        rootLis.forEach(li=>{
+          const data = li.getAttribute('data-wb-fieldflow') || '';
+          const cfg = parseFieldflowData(data);
+          const action = typeof cfg?.action === 'string' ? cfg.action.trim().toLowerCase() : '';
+          const sourceRaw = typeof cfg?.source === 'string' ? cfg.source.trim() : '';
+          const sourceId = sourceRaw.startsWith('#') ? sourceRaw.slice(1) : sourceRaw;
+          const labelNode = li.cloneNode(true);
+          labelNode.querySelectorAll('.wb-fieldflow-sub').forEach(node => node.remove());
+          let labelHtml = labelNode.innerHTML.trim();
+          if(!labelHtml){
+            const txt = li.textContent.trim();
+            labelHtml = txt ? `<p>${escapeHtml(txt)}</p>` : '';
+          }
+          const classes = (li.getAttribute('class') || '').trim();
+
+          if(action === 'removeclass' && sourceId){
+            rootQ.answers.push({
+              id: uid('ans'),
+              text: labelHtml,
+              action: 'panel',
+              panelId: sourceId || null,
+              nextId: null,
+              classes
+            });
+          }else if(li.querySelector('.wb-fieldflow-sub')){
+            const nestedQ = parseQuestionBlock(li.querySelector('.wb-fieldflow-sub'));
+            rootQ.answers.push({
+              id: uid('ans'),
+              text: labelHtml,
+              action: 'goto',
+              panelId: null,
+              nextId: nestedQ.id,
+              classes
+            });
+          }else{
+            rootQ.answers.push({
+              id: uid('ans'),
+              text: labelHtml,
+              action: 'panel',
+              panelId: null,
+              nextId: null,
+              classes
+            });
+          }
+        });
+        firstQuestion = rootQ;
+      }
+    }
+
+    const questions = [];
+    if(firstQuestion) questions.push(firstQuestion);
+    qState.forEach(q=>questions.push(q));
+
+    state.panels = panels;
+    state.questions = questions;
+
+    const introEl=document.querySelector('[data-role="intro"]');
+    if(introEl){
+      introEl.innerHTML = state.intro || '';
+                    ensureTail(introEl);
+      setupEditor(introEl);
+      scheduleDecorate(introEl);
+    }
+
+    refreshAll();
+    updateOutputs();
+  }
+
+  // === Application bootstrap ===
+  bindToolbar();
+  bindAlertDialog();
+  updateComponentsMenuState?.();
+  bindTabs();
+  bindPreview();
+  bindCopy();
+  bindSaveLoad();
+  bindPasteHtml();
+
+  document.getElementById('btnAddQuestion').addEventListener('click', ()=>{
+    state.questions.push({ id:uid('q'), html:'', descHtml:'', answers:[] });
+    refreshAll();
+  });
+  document.getElementById('btnAddAnswerPanel').addEventListener('click', ()=>{
+    state.panels.push({ id:uid('answer'), style:'info', headingLevel:'none', headingText:'', bodyHTML:'' });
+    refreshAll();
+  });
+
+  refreshAll();
+  updateOutputs();
+  </script>
+</body>
+</html>
